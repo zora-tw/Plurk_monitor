@@ -1,8 +1,8 @@
 name: Check Plurk and Notify
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'  # 每 5 分鐘執行一次
+  #schedule:
+  #  - cron: '*/5 * * * *'  # 每 5 分鐘執行一次
   workflow_dispatch:
 
 jobs:
