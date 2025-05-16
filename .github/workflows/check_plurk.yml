@@ -1,0 +1,44 @@
+name: Check Plurk and Notify
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # 每 5 分鐘執行一次
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download last state artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: plurk-state
+      continue-on-error: true  # 第一次沒檔案也能繼續
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.10
+
+    - name: Install dependencies
+      run: pip install requests requests_oauthlib
+
+    - name: Run script
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        CHAT_ID: ${{ secrets.CHAT_ID }}
+        PLURK_APP_KEY: ${{ secrets.PLURK_APP_KEY }}
+        PLURK_APP_SECRET: ${{ secrets.PLURK_APP_SECRET }}
+        PLURK_ACCESS_TOKEN: ${{ secrets.PLURK_ACCESS_TOKEN }}
+        PLURK_ACCESS_TOKEN_SECRET: ${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
+      run: python check_plurk.py
+
+    - name: Upload new state artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: plurk-state
+        path: last_plurk.json
