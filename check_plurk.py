@@ -91,3 +91,5 @@ if __name__ == "__main__":
             print("🔍 沒有新貼文（ID 或時間未更新）")
     else:
         print("❌ 找不到任何貼文")
+        save_last_info(last_id, last_time.strftime("%Y-%m-%d %H:%M:%S"))
+
