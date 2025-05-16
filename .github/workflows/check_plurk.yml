@@ -38,6 +38,7 @@ jobs:
           ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
 
       - name: Upload artifact (plurk-state)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: plurk-state
