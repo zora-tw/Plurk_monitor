@@ -6,39 +6,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  restore-artifact:
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⬇️ 下載 last_plurk.json artifact（若存在）
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: last-plurk-state
-          path: .
-
   check-plurk:
-    needs: restore-artifact
     runs-on: ubuntu-latest
+
     steps:
       - name: ⬇️ Checkout repository
         uses: actions/checkout@v4
-
-      - name: ⬇️ 再次下載 last_plurk.json artifact（確保檔案存在）
-        uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
-          name: last-plurk-state
-          path: .
+          persist-credentials: true  # 保留 GitHub Token 用於 push
 
-      - name: 🐍 安裝 Python 3.10
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 📦 安裝套件依賴
+      - name: 📦 Install dependencies
         run: pip install requests requests_oauthlib
 
-      - name: 🔐 執行 Plurk 檢查並推播 Telegram
+      - name: 🔐 Set environment variables
+        run: echo "環境變數由 GitHub Secret 提供"
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          PLURK_APP_KEY: ${{ secrets.PLURK_APP_KEY }}
+          PLURK_APP_SECRET: ${{ secrets.PLURK_APP_SECRET }}
+          PLURK_ACCESS_TOKEN: ${{ secrets.PLURK_ACCESS_TOKEN }}
+          PLURK_ACCESS_TOKEN_SECRET: ${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
+
+      - name: 🚀 Run Plurk Checker
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -48,8 +43,12 @@ jobs:
           PLURK_ACCESS_TOKEN_SECRET: ${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
         run: python check_plurk.py
 
-      - name: 📤 上傳最新 last_plurk.json 為 artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: last-plurk-state
-          path: last_plurk.json
+      - name: 📌 Commit updated state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/state/last_plurk.json
+          git diff --staged --quiet || git commit -m "🔄 Update last Plurk state"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
