@@ -15,6 +15,7 @@ jobs:
 
       - name: 📦 Restore last_plurk.json from artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true  # <- 下載失敗也不會終止
         with:
           name: last-plurk-state
           path: .
