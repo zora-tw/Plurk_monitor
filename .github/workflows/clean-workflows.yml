@@ -1,0 +1,42 @@
+name: Clean Old Workflow Runs
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 每天凌晨 3 點執行（UTC）
+  workflow_dispatch:      # 可手動觸發
+
+jobs:
+  delete-old-runs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete old workflow runs (keep only the latest)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflowName = 'check_plurk.yml'; // 你的 workflow 檔案名稱
+
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: workflowName,
+              per_page: 100,
+            });
+
+            if (runs.workflow_runs.length <= 1) {
+              console.log('只有一個 workflow run，不需要刪除。');
+              return;
+            }
+
+            const [latestRun, ...oldRuns] = runs.workflow_runs;
+
+            for (const run of oldRuns) {
+              console.log(`刪除 Run #${run.run_number} (${run.id})`);
+              await github.rest.actions.deleteWorkflowRun({
+                owner,
+                repo,
+                run_id: run.id,
+              });
+            }
