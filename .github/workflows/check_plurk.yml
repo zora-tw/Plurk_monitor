@@ -4,7 +4,10 @@ on:
   schedule:
     - cron: '*/10 * * * *'  # 每 10 分鐘執行一次
   workflow_dispatch:
-
+  
+permissions:
+  contents: write  # 這一行很重要，允許 workflow push 變更回 repo
+  
 jobs:
   check-plurk:
     runs-on: ubuntu-latest
@@ -13,7 +16,7 @@ jobs:
       - name: ⬇️ Checkout repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: true  # 保留 GitHub Token 用於 push
+          token: ${{ secrets.GITHUB_TOKEN }}  # 預設 token，可用於 push
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
@@ -52,3 +55,11 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📤 Commit and push state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/state/last_plurk.json
+          git commit -m "🔄 Update last Plurk state" || echo "No changes to commit"
+          git push origin HEAD
