@@ -1,45 +1,54 @@
-# .github/workflows/check_plurk.yml
-name: Check Plurk
+name: Check Plurk and Notify
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
-  workflow_dispatch:  # 允許手動觸發
+    - cron: '*/10 * * * *'  # 每 10 分鐘執行一次
+  workflow_dispatch:
 
 jobs:
   check-plurk:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install requests requests_oauthlib
-
-      - name: Load last artifact
+      - name: 📦 Restore last_plurk.json from artifact
         uses: actions/download-artifact@v4
         with:
-          name: plurk-state
-        continue-on-error: true
+          name: last-plurk-state
+          path: .
 
-      - name: Run Plurk checker
-        run: python check_plurk.py
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install dependencies
+        run: pip install requests requests_oauthlib
+
+      - name: 🔐 Set environment variables
+        run: echo "環境變數由 GitHub Secret 提供"
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           PLURK_APP_KEY: ${{ secrets.PLURK_APP_KEY }}
           PLURK_APP_SECRET: ${{ secrets.PLURK_APP_SECRET }}
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+          PLURK_ACCESS_TOKEN: ${{ secrets.PLURK_ACCESS_TOKEN }}
+          PLURK_ACCESS_TOKEN_SECRET: ${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
 
-      - name: Upload artifact (plurk-state)
-        if: always()
+      - name: 🚀 Run Plurk Checker
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          PLURK_APP_KEY: ${{ secrets.PLURK_APP_KEY }}
+          PLURK_APP_SECRET: ${{ secrets.PLURK_APP_SECRET }}
+          PLURK_ACCESS_TOKEN: ${{ secrets.PLURK_ACCESS_TOKEN }}
+          PLURK_ACCESS_TOKEN_SECRET: ${{ secrets.PLURK_ACCESS_TOKEN_SECRET }}
+        run: python check_plurk.py
+
+      - name: 📤 Upload last_plurk.json to artifact
         uses: actions/upload-artifact@v4
         with:
-          name: plurk-state
+          name: last-plurk-state
           path: last_plurk.json
