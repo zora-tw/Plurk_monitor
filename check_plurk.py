@@ -56,7 +56,7 @@ def load_last_state():
 def save_last_state(plurk_id, time_tw):
     with open(STATE_FILE, "w", encoding="utf-8") as f:
         json.dump({
-            "last_plurk_id": plurk_id,
+            "last_plurk_id": str(plurk_id),
             "last_time_tw": time_tw
         }, f, ensure_ascii=False, indent=2)
 
