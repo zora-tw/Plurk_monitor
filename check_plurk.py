@@ -49,13 +49,16 @@ def get_latest_plurk(query="麥當勞"):
 
 def load_last_state():
     if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, 'r', encoding='utf-8') as f:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
-def save_last_state(plurk_id, post_time):
-    with open(STATE_FILE, 'w', encoding='utf-8') as f:
-        json.dump({"plurk_id": plurk_id, "post_time": post_time}, f)
+def save_last_state(plurk_id, time_tw):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump({
+            "last_plurk_id": plurk_id,
+            "last_time_tw": time_tw
+        }, f, ensure_ascii=False, indent=2)
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
