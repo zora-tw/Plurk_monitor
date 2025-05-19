@@ -2,7 +2,7 @@ name: Check Plurk and Notify
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # 每 15 分鐘執行一次（將套用 Asia/Taipei）
+    - cron: '7-59/5 * * * *'  # 從第 7 分鐘開始每隔 5 分鐘執行一次（將套用 Asia/Taipei）
   workflow_dispatch:
 
 permissions:
