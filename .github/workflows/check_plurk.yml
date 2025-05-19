@@ -2,7 +2,7 @@ name: Check Plurk and Notify
 
 on:
   schedule:
-    - cron: '7-59/5 * * * *'  # 從第 7 分鐘開始每隔 5 分鐘執行一次（將套用 Asia/Taipei）
+    - cron: '7-59/5 * * * *'  # 從第 7 分鐘開始每隔 5 分鐘執行一次（UTC 時區）
   workflow_dispatch:
 
 permissions:
@@ -15,6 +15,43 @@ jobs:
     steps:
       - name: 🌏 Set timezone to Asia/Taipei
         run: sudo ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+
+      - name: 🕓 Print expected & actual time (Taiwan Time)
+        run: |
+          echo "=== GitHub Actions 排程時間檢查（台灣時間） ==="
+
+          export TZ=Asia/Taipei
+
+          actual_time=$(date '+%Y-%m-%d %H:%M:%S')
+          actual_ts=$(date +%s)
+          echo "🟢 實際執行時間（台灣）: $actual_time"
+
+          # 計算排程應該落在哪個分鐘點（從第7分鐘開始每5分鐘）
+          minute=$(date +%M)
+          hour=$(date +%H)
+
+          # 找出離目前時間最近的過去排程點
+          offset=$(( (minute - 7) % 5 ))
+          expected_minute=$((minute - offset))
+
+          if [ "$expected_minute" -lt 0 ]; then
+            expected_minute=$((expected_minute + 60))
+            hour=$((hour - 1))
+            if [ "$hour" -lt 0 ]; then hour=23; fi
+          fi
+
+          expected_time=$(date -d "$hour:$expected_minute" '+%Y-%m-%d %H:%M:%S')
+          expected_ts=$(date -d "$hour:$expected_minute" +%s)
+          delay=$((actual_ts - expected_ts))
+
+          echo "🕓 預期排程時間（台灣）: $expected_time"
+          echo "⏱ 延遲秒數: ${delay} 秒"
+
+          if [ "$delay" -gt 60 ]; then
+            echo "⚠️ 執行有明顯延遲！"
+          else
+            echo "✅ 執行時間正常"
+          fi
 
       - name: ⬇️ Checkout repository
         uses: actions/checkout@v4
