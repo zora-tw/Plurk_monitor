@@ -92,7 +92,7 @@ def main():
             filtered.append((current_time, p))
 
     # 按時間排序（由舊到新）
-    filtered.sort()
+    filtered.sort(key=lambda x: x[0])
 
     for _, plurk in filtered:
         msg = f"\U0001f195 Plurk 有新貼文！\n\n\U0001f4dd {plurk['content']}\n\u23f0 {plurk['post_time']}\n\U0001f517 {plurk['link']}"
