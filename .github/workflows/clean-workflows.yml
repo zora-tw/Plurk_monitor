@@ -2,7 +2,7 @@ name: Clean Old Workflow Runs
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小時整點執行（台灣時間）
+    - cron: '49 * * * *'  # 每小時的第 49 分鐘執行（台灣時間）
   workflow_dispatch:
 
 jobs:
