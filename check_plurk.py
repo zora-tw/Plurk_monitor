@@ -30,21 +30,27 @@ def convert_to_taiwan_time(utc_str):
     dt_tw = dt_utc.astimezone(timezone(timedelta(hours=8)))
     return dt_tw.strftime("%Y-%m-%d %H:%M:%S")
 
-def get_latest_plurk(query="ちいかわ"):
+def get_latest_plurks(query="ちいかわ", limit=10):
     url = "https://www.plurk.com/APP/PlurkSearch/search"
-    params = {"query": query, "limit": 1}
+    params = {"query": query, "limit": limit}
     response = requests.get(url, params=params, auth=auth)
     data = response.json()
+    plurks_info = []
 
-    if 'plurks' in data and data['plurks']:
-        plurk = data['plurks'][0]
-        content = plurk.get('content_raw', '')
-        plurk_id = plurk.get('plurk_id')
-        posted_time = plurk.get('posted')
-        time_tw = convert_to_taiwan_time(posted_time)
-        link = f"https://www.plurk.com/p/{base36_encode(plurk_id)}"
-        return plurk_id, content, time_tw, link
-    return None, None, None, None
+    if 'plurks' in data:
+        for plurk in data['plurks']:
+            content = plurk.get('content_raw', '')
+            plurk_id = plurk.get('plurk_id')
+            posted_time = plurk.get('posted')
+            time_tw = convert_to_taiwan_time(posted_time)
+            link = f"https://www.plurk.com/p/{base36_encode(plurk_id)}"
+            plurks_info.append({
+                "plurk_id": plurk_id,
+                "content": content,
+                "post_time": time_tw,
+                "link": link
+            })
+    return plurks_info
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -69,18 +75,27 @@ def main():
     last_time_str = last_state.get("post_time")
     last_time = datetime.strptime(last_time_str, "%Y-%m-%d %H:%M:%S") if last_time_str else None
 
-    pid, content, time_tw, link = get_latest_plurk()
-    if pid and content:
+    new_plurks = get_latest_plurks()
+
+    # 篩選出比 last_id 新、且時間比 last_time 晚的貼文
+    filtered = []
+    for p in new_plurks:
+        pid = str(p["plurk_id"])
+        time_tw = p["post_time"]
         current_time = datetime.strptime(time_tw, "%Y-%m-%d %H:%M:%S")
-        if (last_id is None or str(pid) != str(last_id)) and (last_time is None or current_time > last_time):
-            msg = f"\U0001f195 Plurk 有新貼文！\n\n\U0001f4dd {content}\n\u23f0 {time_tw}\n\U0001f517 {link}"
-            print(msg)
-            send_telegram_message(msg)
-            save_last_state(pid, time_tw)
-        else:
-            print("🔍 沒有新貼文（ID 或時間未更新）")
-    else:
-        print("🔍 沒有取得貼文資料")
+        if (last_id is None or pid != str(last_id)) and (last_time is None or current_time > last_time):
+            filtered.append((current_time, p))
+
+    # 按時間排序（舊到新），逐則通知
+    filtered.sort()
+    for _, plurk in filtered:
+        msg = f"\U0001f195 Plurk 有新貼文！\n\n\U0001f4dd {plurk['content']}\n\u23f0 {plurk['post_time']}\n\U0001f517 {plurk['link']}"
+        print(msg)
+        send_telegram_message(msg)
+        save_last_state(plurk['plurk_id'], plurk['post_time'])
+
+    if not filtered:
+        print("🔍 沒有新貼文（無更新）")
 
 if __name__ == "__main__":
     main()
