@@ -2,21 +2,24 @@ name: Check Plurk and Notify
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # 每 15 分鐘執行一次
+    - cron: '*/15 * * * *'  # 每 15 分鐘執行一次（將套用 Asia/Taipei）
   workflow_dispatch:
-  
+
 permissions:
   contents: write  # 這一行很重要，允許 workflow push 變更回 repo
-  
+
 jobs:
   check-plurk:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 🌏 Set timezone to Asia/Taipei
+        run: sudo ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+
       - name: ⬇️ Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # 預設 token，可用於 push
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
