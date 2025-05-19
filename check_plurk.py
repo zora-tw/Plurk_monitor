@@ -35,8 +35,8 @@ def get_latest_plurks(query="ちいかわ", limit=10):
     params = {"query": query, "limit": limit}
     response = requests.get(url, params=params, auth=auth)
     data = response.json()
-    plurks_info = []
 
+    results = []
     if 'plurks' in data:
         for plurk in data['plurks']:
             content = plurk.get('content_raw', '')
@@ -44,13 +44,13 @@ def get_latest_plurks(query="ちいかわ", limit=10):
             posted_time = plurk.get('posted')
             time_tw = convert_to_taiwan_time(posted_time)
             link = f"https://www.plurk.com/p/{base36_encode(plurk_id)}"
-            plurks_info.append({
+            results.append({
                 "plurk_id": plurk_id,
                 "content": content,
                 "post_time": time_tw,
                 "link": link
             })
-    return plurks_info
+    return results
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -77,7 +77,12 @@ def main():
 
     new_plurks = get_latest_plurks()
 
-    # 篩選出比 last_id 新、且時間比 last_time 晚的貼文
+    # 🔍 Debug 印出最新10則貼文
+    print("📋 取得的最新 10 則貼文：")
+    for p in new_plurks:
+        print(f"  - plurk_id: {p['plurk_id']}, post_time: {p['post_time']}")
+
+    # 過濾比 last 更新的貼文
     filtered = []
     for p in new_plurks:
         pid = str(p["plurk_id"])
@@ -86,8 +91,9 @@ def main():
         if (last_id is None or pid != str(last_id)) and (last_time is None or current_time > last_time):
             filtered.append((current_time, p))
 
-    # 按時間排序（舊到新），逐則通知
+    # 按時間排序（由舊到新）
     filtered.sort()
+
     for _, plurk in filtered:
         msg = f"\U0001f195 Plurk 有新貼文！\n\n\U0001f4dd {plurk['content']}\n\u23f0 {plurk['post_time']}\n\U0001f517 {plurk['link']}"
         print(msg)
