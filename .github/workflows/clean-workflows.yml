@@ -2,14 +2,17 @@ name: Clean Old Workflow Runs
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小時的第 0 分鐘執行（整點）
-  workflow_dispatch:      # 可手動觸發
+    - cron: '0 * * * *'  # 每小時整點執行（台灣時間）
+  workflow_dispatch:
 
 jobs:
   delete-old-runs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 🌏 Set timezone to Asia/Taipei
+        run: sudo ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+
       - name: Delete old workflow runs
         uses: actions/github-script@v7
         with:
