@@ -35,7 +35,7 @@ jobs:
             echo "🟢 實際執行時間（台灣）: $ACTUAL_TIME"
             echo "🕓 預期排程時間（台灣）: $EXPECTED_TIME"
             echo "⏱ 延遲秒數: $DELAY_SEC 秒"
-            if [ "$DELAY_SEC" -gt 60 ]; then
+            if [ "$DELAY_SEC" -gt 300 ]; then
               echo "⚠️ 執行有明顯延遲！"
             else
               echo "✅ 延遲在可接受範圍內"
