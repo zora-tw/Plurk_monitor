@@ -25,9 +25,9 @@ jobs:
           if [ "$EVENT_NAME" = "schedule" ]; then
             MINUTE=$(date '+%M')
             HOUR=$(date '+%H')
-            # 找出最近的排程分鐘（7, 12, 17, ..., 57）
-            MOD=$(( (MINUTE - 7) % 5 ))
-            if [ "$MOD" -lt 0 ]; then MOD=$((MOD + 5)); fi
+            # 找出最近的排程分鐘（7, 22, 37, 52）
+            MOD=$(( (MINUTE - 7) % 15 ))
+            if [ "$MOD" -lt 0 ]; then MOD=$((MOD + 15)); fi
             EXPECTED_MINUTE=$(( MINUTE - MOD ))
             EXPECTED_TIME=$(date -d "$HOUR:$EXPECTED_MINUTE" '+%Y-%m-%d %H:%M:%S')
             DELAY_SEC=$(( $(date -d "$ACTUAL_TIME" +%s) - $(date -d "$EXPECTED_TIME" +%s) ))
