@@ -2,7 +2,7 @@ name: Clean Old Workflow Runs
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小時的第 0 分鐘執行（也就是整點）
+    - cron: '0 * * * *'  # 每小時的第 0 分鐘執行（整點）
   workflow_dispatch:      # 可手動觸發
 
 jobs:
@@ -10,33 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Delete old workflow runs (keep only the latest)
+      - name: Delete old workflow runs
         uses: actions/github-script@v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const workflowName = 'check_plurk.yml'; // 你的 workflow 檔案名稱
 
-            const { data: runs } = await github.rest.actions.listWorkflowRuns({
-              owner,
-              repo,
-              workflow_id: workflowName,
-              per_page: 100,
-            });
+            const cleanupWorkflows = [
+              { name: 'check_plurk.yml', keep: 1 },
+              { name: 'clean-workflows.yml', keep: 3 },
+            ];
 
-            if (runs.workflow_runs.length <= 1) {
-              console.log('只有一個 workflow run，不需要刪除。');
-              return;
-            }
+            for (const { name, keep } of cleanupWorkflows) {
+              console.log(`處理 workflow: ${name}，保留最新 ${keep} 筆`);
 
-            const [latestRun, ...oldRuns] = runs.workflow_runs;
+              try {
+                const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                  owner,
+                  repo,
+                  workflow_id: name,
+                  per_page: 100,
+                });
 
-            for (const run of oldRuns) {
-              console.log(`刪除 Run #${run.run_number} (${run.id})`);
-              await github.rest.actions.deleteWorkflowRun({
-                owner,
-                repo,
-                run_id: run.id,
-              });
+                if (runs.total_count <= keep) {
+                  console.log(`${name} 沒有多餘的 workflow runs，略過刪除。`);
+                  continue;
+                }
+
+                const oldRuns = runs.workflow_runs.slice(keep);
+
+                for (const run of oldRuns) {
+                  console.log(`刪除 ${name} 的 Run #${run.run_number} (${run.id})`);
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner,
+                    repo,
+                    run_id: run.id,
+                  });
+                }
+
+              } catch (error) {
+                console.error(`無法處理 ${name}：${error.message}`);
+              }
             }
