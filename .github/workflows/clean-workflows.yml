@@ -21,7 +21,7 @@ jobs:
             const repo = context.repo.repo;
 
             const cleanupWorkflows = [
-              { name: 'check_plurk.yml', keep: 3 },
+              { name: 'check_plurk.yml', keep: 20 },
               { name: 'clean-workflows.yml', keep: 3 },
             ];
 
