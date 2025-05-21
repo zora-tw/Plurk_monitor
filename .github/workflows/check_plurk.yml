@@ -25,6 +25,11 @@ jobs:
           if [ "$EVENT_NAME" = "schedule" ]; then
             MINUTE=$(date '+%M')
             HOUR=$(date '+%H')
+
+            # 修正：強制轉為十進位，避免八進位錯誤
+            MINUTE=$((10#$MINUTE))
+            HOUR=$((10#$HOUR))
+
             # 找出最近的排程分鐘（7, 22, 37, 52）
             MOD=$(( (MINUTE - 7) % 15 ))
             if [ "$MOD" -lt 0 ]; then MOD=$((MOD + 15)); fi
