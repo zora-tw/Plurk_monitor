@@ -34,6 +34,20 @@ jobs:
             MOD=$(( (MINUTE - 7) % 15 ))
             if [ "$MOD" -lt 0 ]; then MOD=$((MOD + 15)); fi
             EXPECTED_MINUTE=$(( MINUTE - MOD ))
+
+            # 處理 EXPECTED_MINUTE < 0 的情況（跨小時）
+            if [ "$EXPECTED_MINUTE" -lt 0 ]; then
+              EXPECTED_MINUTE=$((EXPECTED_MINUTE + 60))
+              HOUR=$((HOUR - 1))
+              if [ "$HOUR" -lt 0 ]; then
+                HOUR=23
+              fi
+            fi
+            
+            # 格式化 HOUR 和 MINUTE（補零）
+            HOUR=$(printf "%02d" $HOUR)
+            EXPECTED_MINUTE=$(printf "%02d" $EXPECTED_MINUTE)
+            
             EXPECTED_TIME=$(date -d "$HOUR:$EXPECTED_MINUTE" '+%Y-%m-%d %H:%M:%S')
             DELAY_SEC=$(( $(date -d "$ACTUAL_TIME" +%s) - $(date -d "$EXPECTED_TIME" +%s) ))
 
