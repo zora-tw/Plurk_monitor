@@ -30,7 +30,7 @@ def convert_to_taiwan_time(utc_str):
     dt_tw = dt_utc.astimezone(timezone(timedelta(hours=8)))
     return dt_tw.strftime("%Y-%m-%d %H:%M:%S")
 
-def get_latest_plurks(query="ちいかわ", limit=10):
+def get_latest_plurks(query="麥當勞", limit=10):
     url = "https://www.plurk.com/APP/PlurkSearch/search"
     params = {"query": query, "limit": limit}
     response = requests.get(url, params=params, auth=auth)
